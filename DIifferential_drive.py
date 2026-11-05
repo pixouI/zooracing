@@ -1,4 +1,3 @@
-
 import math
 import time
 
@@ -12,6 +11,14 @@ class DifferentialDrive:
 
         # Begge motorer starter slukket.
         self.stop()
+
+        # Variabler til styring af rotation.
+        self.remaining_steps = 0
+        self.rotation_left_direction = 0
+        self.rotation_right_direction = 0
+        self.rotation_delay = 0
+        self.last_step_time = 0
+        self.rotating = False
 
     # Robotens mål i centimeter.
     wheel_diameter = 8.5
@@ -105,7 +112,7 @@ class DifferentialDrive:
         elif angle < 0:
             self.move(steps, -1, 1, delay)
 
-    # Drejer omkring ét hjul. abs betyder at den retunere den absolutte værdi af et kompleks tal (n). I dette tilfælde vinklen divideret med 180.
+    # Drejer omkring ét hjul.
     def pivot_turn(self, angle, stationary_side="left", delay=0.003):
 
         if stationary_side not in ("left", "right"):
@@ -124,3 +131,54 @@ class DifferentialDrive:
 
         else:
             self.move(steps, direction, 0, delay)
+
+    # Starter en rotation uden at blokere programmet.
+    def start_rotate(self, angle, delay=0.02):
+
+        # Stopper eventuelle tidligere bevægelser.
+        self.stop()
+
+        self.remaining_steps = self.turn_steps(angle)
+
+        if angle > 0:
+            self.rotation_left_direction = 1
+            self.rotation_right_direction = -1
+
+        elif angle < 0:
+            self.rotation_left_direction = -1
+            self.rotation_right_direction = 1
+
+        else:
+            self.rotating = False
+            return
+
+        self.rotation_delay = max(delay, 0.001)
+        self.last_step_time = time.ticks_us()
+        self.rotating = True
+
+    # Opdaterer motorerne ét step ad gangen.
+    def update_rotation(self):
+
+        if not self.rotating:
+            return False
+
+        current_time = time.ticks_us()
+
+        # Kontrollerer om det er tid til næste step.
+        if time.ticks_diff(current_time, self.last_step_time) >= self.rotation_delay * 1_000_000:
+
+            # Tager ét step med hver motor.
+            self.left.step(self.rotation_left_direction)
+            self.right.step(self.rotation_right_direction)
+
+            self.remaining_steps -= 1
+            self.last_step_time = current_time
+
+            # Stopper når rotationen er færdig.
+            if self.remaining_steps <= 0:
+                self.rotating = False
+                self.stop()
+
+        return self.rotating
+
+    print("n")
