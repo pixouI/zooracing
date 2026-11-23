@@ -20,7 +20,17 @@ right_motor.set_step_mode("full")
 
 robot = DifferentialDrive(left_motor, right_motor)
 
+# Opret knappen
+button = Pin(22, Pin.IN, Pin.PULL_UP)
+
 aktiv_kommando = "S"
+
+button_previous = 1
+running = True 
+i = 0
+last_press = time.ticks_ms()
+
+
 
 led1 = PWM(Pin("GP28"))
 led2 = PWM(Pin("GP27"))
@@ -57,7 +67,28 @@ try:
             ny_linje = sys.stdin.readline().strip()
             if ny_linje != "":
                 aktiv_kommando = ny_linje
-                opdater_leds(aktiv_kommando)
+                
+                
+        button_now = button.value()
+        # Registrer et nyt knaptryk
+        if button_now == 0 and button_previous == 1:
+            now = time.ticks_ms()
+
+            if time.ticks_diff(now, last_press) >= 200:
+                running = not running
+                last_press = now
+
+        button_previous = button_now
+        
+        if not running:
+            led.off()
+            led1.duty_u16(0)
+            led2.duty_u16(0)
+            led3.duty_u16(0)
+            robot.stop()
+            continue
+        
+        opdater_leds(aktiv_kommando)
         
         if aktiv_kommando == "V1":
             led.on()
