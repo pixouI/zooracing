@@ -8,7 +8,7 @@ def measureLight():
     while True:
         lightLvl = sensor_pin.read_u16() # read value of sensor in 16-bit
         print(lightLvl) # print values to console
-        log(str(lightLvl), startTime) # call log function
+        #log(str(lightLvl), startTime) # call log function
         time.sleep(0.1) # delay between measurements (here 0.1 seconds)
 
 def log(sensorData, startTime): # Function to log data to a csv file
