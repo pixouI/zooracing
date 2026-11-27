@@ -15,11 +15,12 @@ class PID:
         self.sensorPins = [sensor1, sensor2, sensor3]
     
     def getSensorVals(self):
+        self.sensorData = []
         for i in range(len(self.sensorPins)):
-            self.sensorData = []
             self.sensorData.append(self.sensorPins[i].read_u16()) # evt. bitshift m. >> 6 
         
     def findError(self):   
+        self.getSensorVals()
         total = sum(self.sensorData)
         if total > 0:
             error = (self.sensorData[0] * -1 + self.sensorData[1] * 0 + self.sensorData[2] * 1) / total
